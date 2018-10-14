@@ -23,7 +23,15 @@ public class NettyServe {
                     }
                 });
 
-        serverBootstrap.bind(8000);
+        int port = 8000;
+        serverBootstrap.bind(port)
+                .addListener(future -> {
+                    if (future.isSuccess()) {
+                        System.out.println("bind port " + port + " success!");
+                    } else {
+                        System.err.println("bind port " + port + " fail");
+                    }
+                });
 
         Thread.sleep(100000);
     }
