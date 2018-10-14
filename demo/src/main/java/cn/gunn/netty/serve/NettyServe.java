@@ -8,7 +8,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 
 public class NettyServe {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         NioEventLoopGroup bossGroup = new NioEventLoopGroup();
         NioEventLoopGroup workerGroup = new NioEventLoopGroup();
 
@@ -24,5 +24,7 @@ public class NettyServe {
                 });
 
         serverBootstrap.bind(8000);
+
+        Thread.sleep(100000);
     }
 }
