@@ -8,7 +8,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 
 public class NettyClient {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         NioEventLoopGroup workerGroup = new NioEventLoopGroup();
 
         Bootstrap bootstrap = new Bootstrap();
@@ -30,5 +30,7 @@ public class NettyClient {
                         System.out.println("connect falid");
                     }
                 });
+
+        Thread.sleep(100000);
     }
 }
