@@ -1,5 +1,6 @@
 package cn.gunn.netty.serve;
 
+import cn.gunn.netty.handler.FirstServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -19,7 +20,7 @@ public class NettyServe {
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
                     @Override
                     protected void initChannel(NioSocketChannel nioSocketChannel) throws Exception {
-
+                        nioSocketChannel.pipeline().addLast(new FirstServerHandler());
                     }
                 });
 
@@ -31,8 +32,7 @@ public class NettyServe {
                     } else {
                         System.err.println("bind port " + port + " fail");
                     }
-                });
+                }).sync();
 
-        Thread.sleep(100000);
     }
 }
