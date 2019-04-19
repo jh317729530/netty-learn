@@ -10,7 +10,11 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
+import io.netty.util.concurrent.DefaultPromise;
+import io.netty.util.concurrent.ImmediateEventExecutor;
+import io.netty.util.concurrent.Promise;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -130,7 +134,18 @@ public class RedisClient {
         get.getBytes(get.readerIndex(), bytes);
         System.out.println(new String(bytes, 0, get.readableBytes()));
 
+        Promise<String> promise = ImmediateEventExecutor.INSTANCE.newPromise();
+        AttributeKey<Promise<String>> result = AttributeKey.newInstance("result");
+        channel.attr(result).set(promise);
+
         channel.writeAndFlush(get).sync().get();
+
+        promise.addListener(future -> {
+            if (future.isSuccess()) {
+                System.out.println("result:"+future.getNow());
+            }
+        });
+
 
         Thread.sleep(1000);
     }
