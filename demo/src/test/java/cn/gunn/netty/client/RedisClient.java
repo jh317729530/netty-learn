@@ -1,6 +1,8 @@
 package cn.gunn.netty.client;
 
 
+import cn.gunn.netty.future.GFuture;
+import cn.gunn.netty.future.impl.RedisFuture;
 import cn.gunn.netty.handler.RedisChannelDuplexHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -12,12 +14,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
-import io.netty.util.concurrent.DefaultPromise;
-import io.netty.util.concurrent.ImmediateEventExecutor;
-import io.netty.util.concurrent.Promise;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 public class RedisClient {
@@ -134,19 +134,45 @@ public class RedisClient {
         get.getBytes(get.readerIndex(), bytes);
         System.out.println(new String(bytes, 0, get.readableBytes()));
 
-        Promise<String> promise = ImmediateEventExecutor.INSTANCE.newPromise();
-        AttributeKey<Promise<String>> result = AttributeKey.newInstance("result");
-        channel.attr(result).set(promise);
+        GFuture<String> future = new RedisFuture<>();
+
+        AttributeKey<GFuture<String>> result = AttributeKey.newInstance("result");
+        channel.attr(result).set(future);
 
         channel.writeAndFlush(get).sync().get();
 
-        promise.addListener(future -> {
-            if (future.isSuccess()) {
-                System.out.println("result:"+future.getNow());
+
+        System.out.println(get(future));
+    }
+
+    public String get(GFuture<String> future) {
+        if (!future.isDone()) {
+            CountDownLatch l = new CountDownLatch(1);
+            future.onComplete((res, e) -> {
+                l.countDown();
+            });
+
+            boolean interrupted = false;
+            while (!future.isDone()) {
+                try {
+                    l.await();
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                    break;
+                }
             }
-        });
 
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
 
-        Thread.sleep(1000);
+        // commented out due to blocking issues up to 200 ms per minute for each thread
+        // future.awaitUninterruptibly();
+        if (future.isSuccess()) {
+            return future.getNow();
+        }
+        return null;
+
     }
 }

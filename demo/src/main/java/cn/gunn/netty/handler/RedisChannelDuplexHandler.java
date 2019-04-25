@@ -1,5 +1,6 @@
 package cn.gunn.netty.handler;
 
+import cn.gunn.netty.future.GFuture;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -35,7 +36,7 @@ public class RedisChannelDuplexHandler extends ChannelDuplexHandler {
 //            result.trySuccess(resultString);
         } else if (code == '$') {
             ByteBuf buf = readBytes(in);
-            Promise<String> result = (Promise<String>) ctx.channel().attr(AttributeKey.valueOf("result")).get();
+            GFuture<String> result = (GFuture<String>) ctx.channel().attr(AttributeKey.valueOf("result")).get();
             result.trySuccess(str);
         }
     }
